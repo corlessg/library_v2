@@ -1,0 +1,10 @@
+show dbs
+db.createCollection("library")
+createCollection -help
+createCollection --help
+show dbs
+createCollection:"library"
+createCollection "library"
+use library
+show dbs
+use admin
