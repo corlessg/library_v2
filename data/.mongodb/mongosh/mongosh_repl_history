@@ -1,3 +1,16 @@
+show collections
+db.createCollection("books")
+show collections
+show collection
+db
+db.find()
+db.books.find()
+db.collectionName.find()
+show
+use library
+library
+show dbs
+dbs
 show dbs
 db.createCollection("library")
 createCollection -help

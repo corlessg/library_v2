@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rocket = {version = "0.5"}
+rocket = {"version" = "0.5.0", features = ["json"]}
 rocket_db_pools = { version = "0.1", features = ["mongodb"]}
 reqwest = {version="0.11",features = ["blocking"]}
 chrono = "0.4"

@@ -1,26 +1,16 @@
 extern crate library;
 
-use repositories:
-
-use rocket_db_pools::{Connection, Database};
-
-#[derive(Database)]
-#[database("mongodb")]
-struct DbConn(rocket_db_pools::mongodb::Client);
-
-
-#[rocket::get("/books")]
-fn get_books(db: Connection<DbConn>) {
-    library::
-}
+use rocket;
+use rocket_db_pools::Database;
 
 #[rocket::main]
 async fn main() {
     let _ = rocket::build()
         .mount("/", rocket::routes![
-            get_books
+            library::rocket_routes::books::get_books,
+            library::rocket_routes::books::create_book
         ])
-        .attach(DbConn::init())
+        .attach(library::rocket_routes::DbConn::init())
         .launch()
         .await;
 }

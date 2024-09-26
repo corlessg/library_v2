@@ -14,7 +14,7 @@ services:
     build: .
     environment:
       - DATABASE_URL=mongodb://user:pass@mongodb/library
-      - ROCKET_DATABASES = {mongodb={url=mongodb://user:pass@mongodb/library}}
+      - ROCKET_DATABASES = {mongodb={url=mongodb://user:pass@mongodb/library?authSource=admin}}
     ports:
     - 8000:8000
     volumes:
