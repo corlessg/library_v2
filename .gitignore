@@ -1,2 +1,5 @@
 /target
 /data
+data/WiredTiger.turtle
+data/WiredTiger.wt
+data/diagnostic.data/metrics.interim
