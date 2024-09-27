@@ -25,9 +25,8 @@ impl LibraryRespository {
         Ok(result)
     }
 
-    pub async fn delete_book_isbn(isbn: String) -> Result<DeleteResult,Error> {
-        let client = commands::load_mongo_client().await;
-        let books: Collection<Book> = client.database("library").collection("books");
+    pub async fn delete_book_isbn(c: &mut Connection<DbConn>, isbn: String) -> Result<DeleteResult,Error> {
+        let books: Collection<Book> = c.database("library").collection("books");
 
         let filter = doc! { "_id": isbn };
         // Optional: Specify additional options, such as projection or other query options

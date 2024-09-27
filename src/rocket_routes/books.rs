@@ -19,3 +19,10 @@ pub async fn create_book(mut db: Connection<DbConn>, book_isbn: String) -> Resul
     .map(|a_book| Custom(Status::Created, json!(a_book)))
     .map_err(|e| server_error(e.into()))
 }
+
+#[rocket::delete("/books", data="<book_isbn>")]
+pub async fn delete_book(mut db: Connection<DbConn>, book_isbn: String) -> Result<Custom<Value>,Custom<Value>> {
+    LibraryRespository::delete_book_isbn(&mut db, book_isbn).await
+    .map(|a_book| Custom(Status::Created, json!(a_book)))
+    .map_err(|e| server_error(e.into()))
+}
