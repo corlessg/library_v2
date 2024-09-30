@@ -1,6 +1,7 @@
 // holds all of the CRUD operations with MongoDB
-use mongodb::{error::Error, options::{ClientOptions, ResolverConfig}, results::{DeleteResult, InsertOneResult}, Client, Collection};
+use mongodb::{error::Error, options::{ClientOptions, ResolverConfig}, results::{DeleteResult, InsertOneResult}, Client, Collection, Cursor};
 use bson::{Document,doc};
+use rocket::futures::TryStreamExt;
 use rocket_db_pools::Connection;
 
 use crate::{commands, models::Book};
@@ -51,16 +52,24 @@ impl LibraryRespository {
         let books = c.database("library").collection("books");
     
         books.insert_one(new_doc, None).await
-
-        // match books.insert_one(new_doc, None).await {
-        //     Ok(insert_result) => {
-        //         println!("New document ID: {}", insert_result.inserted_id);
-        //     }
-        //     Err(err) => {
-        //         println!("Error occurred {}",err);
-        //     }
-        // }  
         
+    }
+
+    pub async fn find_random_books(c: &mut Connection<DbConn>) -> Result<Vec<Document>, Error> {
+        let search = doc! { "$sample": { "size": 5 } };
+
+        let books: Collection<Document> = c.database("library").collection("books");
+        
+        let mut random_books = books.aggregate([search],None).await?;
+
+        let mut result: Vec<Document> = Vec::new();
+
+        while let Some(doc) = random_books.try_next().await? {
+            result.push(doc);
+        }
+        
+        Ok(result)
+
     }
 
 

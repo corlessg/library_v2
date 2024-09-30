@@ -7,9 +7,11 @@ use rocket_db_pools::Database;
 async fn main() {
     let _ = rocket::build()
         .mount("/", rocket::routes![
-            library::rocket_routes::books::get_books,
-            library::rocket_routes::books::create_book
-        ])
+            library::rocket_routes::books::get_book_by_isbn,
+            library::rocket_routes::books::create_book,
+            library::rocket_routes::books::delete_book,
+            library::rocket_routes::books::get_books       
+            ])
         .attach(library::rocket_routes::DbConn::init())
         .launch()
         .await;

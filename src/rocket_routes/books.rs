@@ -7,9 +7,16 @@ use crate::rocket_routes::{DbConn,server_error};
 use crate::repositories::LibraryRespository;
 
 #[rocket::get("/books/<id>")]
-pub async fn get_books(mut db: Connection<DbConn>, id: String) -> Result<Value,Custom<Value>>{
+pub async fn get_book_by_isbn(mut db: Connection<DbConn>, id: String) -> Result<Value,Custom<Value>>{
     LibraryRespository::find_book_isbn(&mut db, id).await
     .map(|a_book| json!(a_book))
+    .map_err(|e| server_error(e.into()))
+}
+
+#[rocket::get("/books")]
+pub async fn get_books(mut db: Connection<DbConn>) -> Result<Value,Custom<Value>>{
+    LibraryRespository::find_random_books(&mut db).await
+    .map(|rand_books| json!(rand_books))
     .map_err(|e| server_error(e.into()))
 }
 
