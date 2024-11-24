@@ -1,10 +1,11 @@
 use rocket::http::Status;
 use rocket::response::status::Custom;
-use rocket::serde::json::{Value,json};
+use rocket::serde::json::{json, Json, Value};
 use rocket_db_pools::Connection;
 
 use crate::rocket_routes::{DbConn,server_error};
 use crate::repositories::LibraryRespository;
+use crate::models::Location;
 
 #[rocket::get("/books/<id>")]
 pub async fn get_book_by_isbn(mut db: Connection<DbConn>, id: String) -> Result<Value,Custom<Value>>{
@@ -25,6 +26,15 @@ pub async fn create_book(mut db: Connection<DbConn>, book_isbn: String) -> Resul
     LibraryRespository::create_book(&mut db, book_isbn).await
     .map(|a_book| Custom(Status::Created, json!(a_book)))
     .map_err(|e| server_error(e.into()))
+}
+
+#[rocket::put("/books/<id>",format="json", data="<book_location>")]
+pub async fn update_book(mut db: Connection<DbConn>, id: String, book_location: Json<Location>) -> Result<Value, Custom<Value>> {
+    let book_loc = book_location.into_inner();
+    
+    LibraryRespository::update_book_location(&mut db, id, book_loc).await
+        .map(|a_loc| json!(a_loc))
+        .map_err(|e| server_error(e.into()))
 }
 
 #[rocket::delete("/books", data="<book_isbn>")]

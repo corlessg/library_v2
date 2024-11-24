@@ -1,10 +1,10 @@
 // holds all of the CRUD operations with MongoDB
-use mongodb::{error::Error, options::{ClientOptions, ResolverConfig}, results::{DeleteResult, InsertOneResult}, Client, Collection, Cursor};
-use bson::{Document,doc};
-use rocket::futures::TryStreamExt;
+use mongodb::{error::Error, options::{ClientOptions, ResolverConfig}, results::{DeleteResult, InsertOneResult, UpdateResult}, Client, Collection, Cursor};
+use bson::{doc, Bson, Document};
+use rocket::futures::{stream::Collect, TryStreamExt};
 use rocket_db_pools::Connection;
 
-use crate::{commands, models::Book};
+use crate::{commands, models::{Book, Location}};
 use crate::rocket_routes::DbConn;
 
 pub struct LibraryRespository;
@@ -53,6 +53,30 @@ impl LibraryRespository {
     
         books.insert_one(new_doc, None).await
         
+    }
+
+    pub async fn update_book_location(c: &mut Connection<DbConn>, isbn: String, loc: Location) -> Result<UpdateResult,Error> {
+        
+        let books: Collection<Book> = c.database("library").collection("books");
+        let filter = doc! { "_id": isbn };
+        
+        let mut new_loc_doc = Document::new();
+
+        if let Some(house) = loc.house {
+            new_loc_doc.insert("location.house",Bson::String(house));
+        };
+
+        if let Some(room) = loc.room {
+            new_loc_doc.insert("location.room",Bson::String(room));
+        };
+
+        if let Some(owner) = loc.owner {
+            new_loc_doc.insert("location.owner",Bson::String(owner));
+        };
+
+        let new_loc = doc! {"$set": new_loc_doc };
+
+        books.update_one(filter, new_loc, None).await
     }
 
     pub async fn find_random_books(c: &mut Connection<DbConn>) -> Result<Vec<Document>, Error> {

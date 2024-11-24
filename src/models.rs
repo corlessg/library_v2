@@ -42,10 +42,10 @@ struct Subject {
 
 #[allow(warnings)]
 #[derive(Debug,Serialize, Deserialize)]
-struct Location {
-    house: Option<String>,
-    room: Option<String>,
-    owner: Option<String>
+pub struct Location {
+    pub house: Option<String>,
+    pub room: Option<String>,
+    pub owner: Option<String>
 }
 
 // #[allow(warnings)]
