@@ -16,7 +16,8 @@ pub struct Book {
     number_of_pages: Option<u32>,
     publish_date: Option<String>,
     subjects: Option<Vec<Subject>>,
-    location: Option<Location>,
+    #[serde(default)]
+    location: Location,
     // excerpts: Option<Vec<Excerpt>>,
     // weight: Option<String>,
     // identifiers: Option<Identifiers>,
@@ -25,6 +26,24 @@ pub struct Book {
     // ebooks: Option<Vec<Ebook>>,
     // cover: Option<Cover>,b
 }
+
+// impl Default for Book {
+//     fn default() -> Self {
+//         Self {
+//             _id: String::new(),
+//             url: None,
+//             key: None,
+//             title: String::from("Untitled"),
+//             subtitle: None,
+//             authors: Vec::new(),
+//             number_of_pages: None,
+//             publish_date: None,
+//             subjects: None,
+//             #[serde(default)]
+//             location: Location::default(), // Explicitly use the default value for Location
+//         }
+//     }
+// }
 
 #[allow(warnings)]
 #[derive(Debug,Serialize, Deserialize)]
@@ -43,9 +62,19 @@ struct Subject {
 #[allow(warnings)]
 #[derive(Debug,Serialize, Deserialize)]
 pub struct Location {
-    pub house: Option<String>,
-    pub room: Option<String>,
-    pub owner: Option<String>
+    pub house: String,
+    pub room: String,
+    pub owner: String
+}
+
+impl Default for Location {
+    fn default() -> Self {
+        Self {
+            house: "Mars".to_string(),
+            room: "Library".to_string(),
+            owner: "Garrett".to_string()
+        }
+    }
 }
 
 // #[allow(warnings)]

@@ -10,7 +10,8 @@ async fn main() {
             library::rocket_routes::books::get_book_by_isbn,
             library::rocket_routes::books::create_book,
             library::rocket_routes::books::delete_book,
-            library::rocket_routes::books::get_books       
+            library::rocket_routes::books::get_books,
+            library::rocket_routes::books::update_book
             ])
         .attach(library::rocket_routes::DbConn::init())
         .launch()

@@ -62,17 +62,21 @@ impl LibraryRespository {
         
         let mut new_loc_doc = Document::new();
 
-        if let Some(house) = loc.house {
-            new_loc_doc.insert("location.house",Bson::String(house));
-        };
+        // if let Some(house) = loc.house {
+        //     new_loc_doc.insert("location.house",Bson::String(house));
+        // };
 
-        if let Some(room) = loc.room {
-            new_loc_doc.insert("location.room",Bson::String(room));
-        };
+        // if let Some(room) = loc.room {
+        //     new_loc_doc.insert("location.room",Bson::String(room));
+        // };
 
-        if let Some(owner) = loc.owner {
-            new_loc_doc.insert("location.owner",Bson::String(owner));
-        };
+        // if let Some(owner) = loc.owner {
+        //     new_loc_doc.insert("location.owner",Bson::String(owner));
+        // };
+
+        new_loc_doc.insert("location.house",Bson::String(loc.house));
+        new_loc_doc.insert("location.room",Bson::String(loc.room));
+        new_loc_doc.insert("location.owner",Bson::String(loc.owner));
 
         let new_loc = doc! {"$set": new_loc_doc };
 
