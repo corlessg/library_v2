@@ -1,9 +1,11 @@
 [package]
 name = "library"
+default-run = "server"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+tokio = "1"
 rocket = {"version" = "0.5.0", features = ["json"]}
 rocket_db_pools = { version = "0.1", features = ["mongodb"]}
 reqwest = {version="0.11",features = ["blocking"]}
@@ -12,3 +14,4 @@ serde = {version="1"}
 serde_json = "1.0"
 mongodb = "2.1"
 bson = { version = "2", features = ["chrono-0_4"] }
+clap = "4.4"

@@ -4,7 +4,7 @@ use bson::{doc, Bson, Document};
 use rocket::futures::{stream::Collect, TryStreamExt};
 use rocket_db_pools::Connection;
 
-use crate::{commands, models::{Book, Location}};
+use crate::{utils, models::{Book, Location}};
 use crate::rocket_routes::DbConn;
 
 pub struct LibraryRespository;
@@ -12,7 +12,7 @@ pub struct LibraryRespository;
 
 impl LibraryRespository {
     
-    pub async fn find_book_isbn(c: &mut Connection<DbConn>, isbn: String) -> Result<Option<Document>,Error> {
+    pub async fn find_book_isbn(c: &mut Client, isbn: String) -> Result<Option<Document>,Error> {
         
         let books = c.database("library").collection("books");
 
@@ -26,7 +26,7 @@ impl LibraryRespository {
         Ok(result)
     }
 
-    pub async fn delete_book_isbn(c: &mut Connection<DbConn>, isbn: String) -> Result<DeleteResult,Error> {
+    pub async fn delete_book_isbn(c: &mut Client, isbn: String) -> Result<DeleteResult,Error> {
         let books: Collection<Book> = c.database("library").collection("books");
 
         let filter = doc! { "_id": isbn };
@@ -39,15 +39,15 @@ impl LibraryRespository {
         Ok(result)
     }
 
-    pub async fn create_book(c: &mut Connection<DbConn>,isbn: String) -> Result<InsertOneResult,Error> {
-        let details = commands::book_details_api(isbn).await.unwrap().text().await.unwrap();
+    pub async fn create_book(c: &mut Client,isbn: String) -> Result<InsertOneResult,Error> {
+        let details = utils::book_details_api(isbn).await.unwrap().text().await.unwrap();
     
         // this fixes the ISBN number name to be _id which is the unique identifier field automatically used by mongoDB
         let details_edited = details.replacen("ISBN", "_id", 1);
         
-        let details_edited_flat = commands::modify_json_structure(details_edited.as_str());
+        let details_edited_flat = utils::modify_json_structure(details_edited.as_str());
      
-        let new_doc = commands::json_to_bson(details_edited_flat.as_ref().unwrap().as_str()).unwrap();
+        let new_doc = utils::json_to_bson(details_edited_flat.as_ref().unwrap().as_str()).unwrap();
     
         let books = c.database("library").collection("books");
     
@@ -55,7 +55,7 @@ impl LibraryRespository {
         
     }
 
-    pub async fn update_book_location(c: &mut Connection<DbConn>, isbn: String, loc: Location) -> Result<UpdateResult,Error> {
+    pub async fn update_book_location(c: &mut Client, isbn: String, loc: Location) -> Result<UpdateResult,Error> {
         
         let books: Collection<Book> = c.database("library").collection("books");
         let filter = doc! { "_id": isbn };
@@ -83,7 +83,7 @@ impl LibraryRespository {
         books.update_one(filter, new_loc, None).await
     }
 
-    pub async fn find_random_books(c: &mut Connection<DbConn>) -> Result<Vec<Document>, Error> {
+    pub async fn find_random_books(c: &mut Client) -> Result<Vec<Document>, Error> {
         let search = doc! { "$sample": { "size": 5 } };
 
         let books: Collection<Document> = c.database("library").collection("books");

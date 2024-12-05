@@ -27,23 +27,6 @@ pub struct Book {
     // cover: Option<Cover>,b
 }
 
-// impl Default for Book {
-//     fn default() -> Self {
-//         Self {
-//             _id: String::new(),
-//             url: None,
-//             key: None,
-//             title: String::from("Untitled"),
-//             subtitle: None,
-//             authors: Vec::new(),
-//             number_of_pages: None,
-//             publish_date: None,
-//             subjects: None,
-//             #[serde(default)]
-//             location: Location::default(), // Explicitly use the default value for Location
-//         }
-//     }
-// }
 
 #[allow(warnings)]
 #[derive(Debug,Serialize, Deserialize)]
