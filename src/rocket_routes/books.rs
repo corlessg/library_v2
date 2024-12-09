@@ -9,7 +9,7 @@ use crate::models::Location;
 
 #[rocket::get("/books/<id>")]
 pub async fn get_book_by_isbn(mut db: Connection<DbConn>, id: String) -> Result<Value,Custom<Value>>{
-    LibraryRespository::find_book_isbn(&mut db, id).await
+    LibraryRespository::find_book_isbn(&mut db, &id).await
     .map(|a_book| json!(a_book))
     .map_err(|e| server_error(e.into()))
 }
@@ -39,7 +39,7 @@ pub async fn update_book(mut db: Connection<DbConn>, id: String, book_location: 
 
 #[rocket::delete("/books", data="<book_isbn>")]
 pub async fn delete_book(mut db: Connection<DbConn>, book_isbn: String) -> Result<Custom<Value>,Custom<Value>> {
-    LibraryRespository::delete_book_isbn(&mut db, book_isbn).await
+    LibraryRespository::delete_book_isbn(&mut db, &book_isbn).await
     .map(|a_book| Custom(Status::Created, json!(a_book)))
     .map_err(|e| server_error(e.into()))
 }

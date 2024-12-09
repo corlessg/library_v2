@@ -43,10 +43,6 @@ async fn main() {
         Command::new("scanner")
             .about("Initialize scanner mode: Enter ISBN numbers for rapid adding to database")
     )
-    .subcommand(
-        Command::new("ssh")
-            .about("Testing ssh")
-    )
     .get_matches();
 
 match matches.subcommand() {

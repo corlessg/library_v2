@@ -12,7 +12,7 @@ pub struct LibraryRespository;
 
 impl LibraryRespository {
     
-    pub async fn find_book_isbn(c: &mut Client, isbn: String) -> Result<Option<Document>,Error> {
+    pub async fn find_book_isbn(c: &mut Client, isbn: &String) -> Result<Option<Document>,Error> {
         
         let books = c.database("library").collection("books");
 
@@ -26,7 +26,7 @@ impl LibraryRespository {
         Ok(result)
     }
 
-    pub async fn delete_book_isbn(c: &mut Client, isbn: String) -> Result<DeleteResult,Error> {
+    pub async fn delete_book_isbn(c: &mut Client, isbn: &String) -> Result<DeleteResult,Error> {
         let books: Collection<Book> = c.database("library").collection("books");
 
         let filter = doc! { "_id": isbn };

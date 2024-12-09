@@ -1,5 +1,5 @@
 
-use mongodb::{Client,error::Error};
+use mongodb::{error::Error, results::DeleteResult, Client};
 
 use crate::repositories::LibraryRespository;
 
@@ -14,11 +14,15 @@ async fn load_mongo_client() -> Client {
 pub async fn find_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
-    let book = LibraryRespository::find_book_isbn(&mut c, isbn).await;
+    let book = LibraryRespository::find_book_isbn(&mut c, &isbn).await;
 
     //TODO! if None is returned, we need to alert instead of saying found None!
     match book {
-        Ok(book) => println!("Successfully found the book: {:?}! ", book),
+        Ok(book) => if book.is_none() {
+            println!("Book {:?} not found!", isbn)
+        } else {
+            println!("Successfully found the book! \n {:?} ", book)
+        },
         Err(book) => println!("Could not find the book to the library due to: {:?} ", book)
     }
 }
@@ -40,12 +44,18 @@ pub async fn add_book(isbn: String) {
 pub async fn remove_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
-    let book = LibraryRespository::delete_book_isbn(&mut c, isbn).await;
+    let book: Result<DeleteResult, Error> = LibraryRespository::delete_book_isbn(&mut c, &isbn).await;
 
     //TODO! Parse the result if deleted_count == 0, then it didn't find the result!
-
+    
     match book {
-        Ok(book) => println!("Successfully removed the book: {:?}! ", book),
+        Ok(book) => 
+            if book.deleted_count == 0 {
+                println!("Book {:?} not found!", isbn)
+            } else {
+                println!("Successfully removed the book: {:?}! ", book)
+            }
+
         Err(book) => println!("Could not remove the book to the library due to: {:?} ", book)
     }
 }
