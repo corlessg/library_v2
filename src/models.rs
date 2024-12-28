@@ -1,8 +1,20 @@
 // models lists all necessary structs we expect to need in our database
 // these will be derived from what is returned calling the ISBN API
 
+
 use serde::{Deserialize,Serialize};
 
+#[derive(Debug,Serialize, Deserialize)]
+enum CheckedStatus {
+    CheckedIn,
+    CheckedOut
+}
+
+impl Default for CheckedStatus {
+    fn default() -> Self {
+        CheckedStatus::CheckedIn
+    }
+}
 
 #[allow(warnings)]
 #[derive(Debug, Serialize, Deserialize)]
@@ -18,6 +30,8 @@ pub struct Book {
     subjects: Option<Vec<Subject>>,
     #[serde(default)]
     location: Location,
+    #[serde(default)]
+    checked_status: CheckedStatus
     // excerpts: Option<Vec<Excerpt>>,
     // weight: Option<String>,
     // identifiers: Option<Identifiers>,

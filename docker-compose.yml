@@ -1,23 +1,23 @@
-services:
+version: '3.8'
 
+services:
   mongodb:
     image: mongodb/mongodb-community-server:6.0-ubi8
     environment:
       - MONGO_INITDB_ROOT_USERNAME=user
       - MONGO_INITDB_ROOT_PASSWORD=pass
     volumes:
-      - type: bind
-        source: ./data
-        target: /data/db
+      - mongodb_data:/data/db
 
   app:
     build: .
     environment:
       - DATABASE_URL=mongodb://user:pass@mongodb/library
-      - ROCKET_DATABASES = {mongodb={url=mongodb://user:pass@mongodb/library?authSource=admin}}
+      - ROCKET_DATABASES={mongodb={url=mongodb://user:pass@mongodb/library?authSource=admin}}
     ports:
-    - 8000:8000
+      - 8000:8000
     volumes:
-    - ./:/app
+      - ./:/app
 
-  
+volumes:
+  mongodb_data:
