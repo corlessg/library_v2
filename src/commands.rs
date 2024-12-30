@@ -1,5 +1,8 @@
 
-use mongodb::{error::Error, results::DeleteResult, Client};
+use std::{fs::File, io::BufReader, path::Path};
+use csv::ReaderBuilder;
+
+use mongodb::{error::Error, results::{DeleteResult, UpdateResult}, Client};
 
 use crate::repositories::LibraryRespository;
 
@@ -64,3 +67,65 @@ pub async fn update_book(isbn: String, ) {
 
 }
 
+pub async fn checkout_book(isbn: String, borrower: String) {
+    let mut c = load_mongo_client().await;
+
+    let book: Result<UpdateResult, Error> = LibraryRespository::checkout_book(&mut c, &isbn, borrower).await;
+
+    match book {
+        Ok(book) => 
+            if book.matched_count == 0 {
+                println!("Book {:?} not found!", &isbn)
+            } else {
+                println!("Successfully removed the book: {:?}! ", book)
+            }
+
+        Err(book) => println!("Could not remove the book to the library due to: {:?} ", book)
+    }
+}
+
+pub async fn checkin_book(isbn: String) {
+    let mut c = load_mongo_client().await;
+
+    let book: Result<UpdateResult, Error> = LibraryRespository::checkin_book(&mut c, &isbn).await;
+
+    match book {
+        Ok(book) => 
+            if book.matched_count == 0 {
+                println!("Book {:?} not found!", isbn)
+            } else {
+                println!("Successfully removed the book: {:?}! ", book)
+            }
+
+        Err(book) => println!("Could not remove the book to the library due to: {:?} ", book)
+    }
+}
+
+pub async fn batch_upload(file_path: &str) {
+    //read file path
+    let path = Path::new(file_path);
+
+    if path.extension().and_then(|s| s.to_str()) != Some("csv") {
+        return println!("Provided file is not a CSV file.")
+    }
+
+    let file = File::open(file_path);
+    match file {
+        Ok(file) => {
+            let reader = BufReader::new(file);
+            let mut reader = ReaderBuilder::new().has_headers(false).from_reader(reader);
+
+
+            for result in reader.records() {
+                if let Ok(record) = result {
+                    let isbn = record.get(0).expect("error parsing line");
+                    add_book(isbn.to_string()).await
+                } else {
+                    println!("error parsing line")
+                }
+                
+            }
+        },
+        Err(e) => println!("Error returned: {}",e)
+    }
+}

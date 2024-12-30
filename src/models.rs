@@ -5,7 +5,7 @@
 use serde::{Deserialize,Serialize};
 
 #[derive(Debug,Serialize, Deserialize)]
-enum CheckedStatus {
+pub enum CheckedStatus {
     CheckedIn,
     CheckedOut
 }
@@ -31,7 +31,8 @@ pub struct Book {
     #[serde(default)]
     location: Location,
     #[serde(default)]
-    checked_status: CheckedStatus
+    checked_status: CheckedStatus,
+    borrower: Option<String>
     // excerpts: Option<Vec<Excerpt>>,
     // weight: Option<String>,
     // identifiers: Option<Identifiers>,

@@ -1,10 +1,10 @@
 // holds all of the CRUD operations with MongoDB
-use mongodb::{error::Error, options::{ClientOptions, ResolverConfig}, results::{DeleteResult, InsertOneResult, UpdateResult}, Client, Collection, Cursor};
+use mongodb::{error::{self, Error}, options::{ClientOptions, ResolverConfig}, results::{DeleteResult, InsertOneResult, UpdateResult}, Client, Collection, Cursor};
 use bson::{doc, Bson, Document};
 use rocket::futures::{stream::Collect, TryStreamExt};
 use rocket_db_pools::Connection;
 
-use crate::{utils, models::{Book, Location}};
+use crate::{models::{Book, CheckedStatus, Location}, utils};
 use crate::rocket_routes::DbConn;
 
 pub struct LibraryRespository;
@@ -83,6 +83,77 @@ impl LibraryRespository {
         books.update_one(filter, new_loc, None).await
     }
 
+    pub async fn checkout_book(c: &mut Client, isbn: &String, borrower: String) -> Result<UpdateResult, Error> {
+        let books: Collection<Document> = c.database("library").collection("books");
+        // Check to make sure book exists in library
+
+        // Check it's status - and if it is currently checkedout, return error
+        // If it is checkedin currently, check it out (need some way to get the user name into the check out category)
+
+        let filter = doc! { "_id": isbn };
+
+        // Prep BSON doc with updated information
+        let mut book_update_doc = Document::new();
+        book_update_doc.insert("borrower",Bson::String(borrower));
+        book_update_doc.insert("checked_status",Bson::String("CheckedOut".to_string()));
+
+        let book_update = doc! {"$set": book_update_doc };
+
+        if let Ok(Some(book)) = books.find_one(filter.clone(), None).await {
+            
+           let book_name = book.get_str("title");
+
+           match book.get_str("checked_status") {
+                Ok(status) if status == "CheckedOut" => {
+                    // Use unwrap because high confidence of existing borrower if CheckedOut
+                    let borrower = book.get_str("borrower").unwrap_or("Unknown borrower").to_string();
+                    return Err(Error::custom(format!("Could not check out book {:?}: Already checked out by {}",book_name, borrower)))
+                },
+                Ok(_) => {
+                    println!("Book is available.");
+                    books.update_one(filter, book_update, None).await
+                },
+                Err(e) => Err(Error::custom(format!("Error {} checking out book: {:?}",e,book_name)))
+           }
+        } else {
+            Err(Error::custom("Book not found in the library."))
+        }
+   
+    }
+    pub async fn checkin_book(c: &mut Client, isbn: &String) -> Result<UpdateResult, Error> {
+        let books: Collection<Document> = c.database("library").collection("books");
+        // Check to make sure book exists in library
+
+        // Check it's status - and if it is currently checkedout, return error
+        // If it is checkedin currently, check it out (need some way to get the user name into the check out category)
+
+        let filter = doc! { "_id": isbn };
+
+        // Prep BSON doc with updated information
+        let mut book_update_doc = Document::new();
+        book_update_doc.insert("checked_status",Bson::String("CheckedIn".to_string()));
+
+        let book_update = doc! {"$set": book_update_doc };
+
+        if let Ok(Some(book)) = books.find_one(filter.clone(), None).await {
+            
+           let book_name = book.get_str("title");
+
+           match book.get_str("checked_status") {
+                Ok(status) if status == "CheckedIn" => {
+                    return Err(Error::custom(format!("Book {:?} has already been checked in",book_name)))
+                },
+                Ok(_) => {
+                    println!("Book is available.");
+                    books.update_one(filter, book_update, None).await
+                },
+                Err(e) => Err(Error::custom(format!("Error {} checking in book: {:?}",e,book_name)))
+           }
+        } else {
+            Err(Error::custom("Book not found in the library."))
+        }
+        
+    }
     pub async fn find_random_books(c: &mut Client) -> Result<Vec<Document>, Error> {
         let search = doc! { "$sample": { "size": 5 } };
 

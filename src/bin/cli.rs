@@ -43,6 +43,13 @@ async fn main() {
         Command::new("scanner")
             .about("Initialize scanner mode: Enter ISBN numbers for rapid adding to database")
     )
+    .subcommand(
+        Command::new("batch")
+            .about("Batch upload from csv file into database")
+            .arg_required_else_help(true)
+            .arg(Arg::new("file_path").required(true))
+
+    )
     .get_matches();
 
 match matches.subcommand() {
@@ -69,6 +76,9 @@ match matches.subcommand() {
         sub_matches.get_one::<String>("isbn").expect("Could not parse the string inout").to_string()
     ).await,
     // Some(("scanner", _)) => library::scanner::scan_books().await,
+    Some(("batch", sub_matches)) => commands::batch_upload(
+        sub_matches.get_one::<String>("file_path").expect("Could not find the filepath")
+    ).await,
     _ => {}            
 }
 }
