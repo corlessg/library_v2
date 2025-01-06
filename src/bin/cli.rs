@@ -75,7 +75,7 @@ match matches.subcommand() {
     Some(("remove", sub_matches)) => commands::remove_book(
         sub_matches.get_one::<String>("isbn").expect("Could not parse the string inout").to_string()
     ).await,
-    // Some(("scanner", _)) => library::scanner::scan_books().await,
+    Some(("scanner", _)) => library::scanner::scan_books().await,
     Some(("batch", sub_matches)) => commands::batch_upload(
         sub_matches.get_one::<String>("file_path").expect("Could not find the filepath")
     ).await,

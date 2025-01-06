@@ -48,8 +48,6 @@ pub async fn remove_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
     let book: Result<DeleteResult, Error> = LibraryRespository::delete_book_isbn(&mut c, &isbn).await;
-
-    //TODO! Parse the result if deleted_count == 0, then it didn't find the result!
     
     match book {
         Ok(book) => 
@@ -102,6 +100,8 @@ pub async fn checkin_book(isbn: String) {
 }
 
 pub async fn batch_upload(file_path: &str) {
+    let mut c = load_mongo_client().await;
+
     //read file path
     let path = Path::new(file_path);
 
@@ -110,6 +110,8 @@ pub async fn batch_upload(file_path: &str) {
     }
 
     let file = File::open(file_path);
+    println!("{:?}",file);
+
     match file {
         Ok(file) => {
             let reader = BufReader::new(file);
@@ -119,7 +121,19 @@ pub async fn batch_upload(file_path: &str) {
             for result in reader.records() {
                 if let Ok(record) = result {
                     let isbn = record.get(0).expect("error parsing line");
-                    add_book(isbn.to_string()).await
+                    let book_search = LibraryRespository::find_book_isbn(&mut c, &isbn.to_string()).await;
+
+                    match book_search {
+                        Ok(book) => if book.is_none() {
+                            println!("Adding: {}",isbn);
+                            if let Err(_) = LibraryRespository::create_book(&mut c, isbn.to_string()).await {
+                                println!("Cannot add: {}.. moving on", isbn);
+                            }
+                        } else {
+                            continue
+                        },
+                        Err(e) => println!("Error adding book")
+                    }
                 } else {
                     println!("error parsing line")
                 }

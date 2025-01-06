@@ -1,11 +1,9 @@
 // holds all of the CRUD operations with MongoDB
-use mongodb::{error::{self, Error}, options::{ClientOptions, ResolverConfig}, results::{DeleteResult, InsertOneResult, UpdateResult}, Client, Collection, Cursor};
+use mongodb::{error::Error, results::{DeleteResult, InsertOneResult, UpdateResult}, Client, Collection};
 use bson::{doc, Bson, Document};
-use rocket::futures::{stream::Collect, TryStreamExt};
-use rocket_db_pools::Connection;
+use rocket::futures::TryStreamExt;
 
-use crate::{models::{Book, CheckedStatus, Location}, utils};
-use crate::rocket_routes::DbConn;
+use crate::{models::{Book, Location}, rocket_routes::books::delete_book, utils};
 
 pub struct LibraryRespository;
 
@@ -40,19 +38,23 @@ impl LibraryRespository {
     }
 
     pub async fn create_book(c: &mut Client,isbn: String) -> Result<InsertOneResult,Error> {
-        let details = utils::book_details_api(isbn).await.unwrap().text().await.unwrap();
-    
-        // this fixes the ISBN number name to be _id which is the unique identifier field automatically used by mongoDB
-        let details_edited = details.replacen("ISBN", "_id", 1);
+        let details = utils::fetch_book_details(isbn).await
+        .map_err(|e| Error::custom(format!("API Error {}",e)))?;
+
         
+        // this fixes the ISBN number name to be _id which is the unique identifier field automatically used by mongoDB        
+        let details_edited = details.replacen("ISBN", "_id", 1);
+    
         let details_edited_flat = utils::modify_json_structure(details_edited.as_str());
-     
+    
         let new_doc = utils::json_to_bson(details_edited_flat.as_ref().unwrap().as_str()).unwrap();
     
         let books = c.database("library").collection("books");
-    
-        books.insert_one(new_doc, None).await
         
+        let result = books.insert_one(new_doc, None).await?;
+
+        Ok(result)
+                
     }
 
     pub async fn update_book_location(c: &mut Client, isbn: String, loc: Location) -> Result<UpdateResult,Error> {
@@ -61,18 +63,6 @@ impl LibraryRespository {
         let filter = doc! { "_id": isbn };
         
         let mut new_loc_doc = Document::new();
-
-        // if let Some(house) = loc.house {
-        //     new_loc_doc.insert("location.house",Bson::String(house));
-        // };
-
-        // if let Some(room) = loc.room {
-        //     new_loc_doc.insert("location.room",Bson::String(room));
-        // };
-
-        // if let Some(owner) = loc.owner {
-        //     new_loc_doc.insert("location.owner",Bson::String(owner));
-        // };
 
         new_loc_doc.insert("location.house",Bson::String(loc.house));
         new_loc_doc.insert("location.room",Bson::String(loc.room));
@@ -132,7 +122,7 @@ impl LibraryRespository {
         // Prep BSON doc with updated information
         let mut book_update_doc = Document::new();
         book_update_doc.insert("checked_status",Bson::String("CheckedIn".to_string()));
-
+        book_update_doc.insert("borrower",Bson::String("".to_string()));
         let book_update = doc! {"$set": book_update_doc };
 
         if let Ok(Some(book)) = books.find_one(filter.clone(), None).await {

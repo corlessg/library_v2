@@ -1,6 +1,8 @@
 use std::io;
 use crate::commands;
 
+// TODO @GPC could clean up a lot of repeated code
+
 pub async fn scan_books() {
     
     // choose an operating mode... query, check-in, check-out
@@ -18,6 +20,32 @@ pub async fn scan_books() {
     if action_list.contains(&action.as_str()) {
         if action == "exit" {
             println!("Exiting the program.");
+        }else if action == "query" {
+            loop {
+                println!("Enter an ISBN (or type 'exit' to quit):");
+        
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).expect("Failed to read line");
+                
+                let input = input.trim().to_lowercase();
+
+                if input == "exit" {
+                    println!("Exiting the program.");
+                    break;
+                }
+
+
+                // Parse the input as a number
+                match input.parse::<i64>() {
+                    Ok(number) => {
+                        commands::find_book(number.to_string()).await;
+                    }
+                    Err(_) => {
+                        println!("Invalid input. Please enter a valid ISBN number or 'exit'.");
+                    }
+                }
+
+            }
         }
         else if action == "checkin" {
             loop {
@@ -47,15 +75,14 @@ pub async fn scan_books() {
         }
         else if action == "checkout" {
             loop {
-
-                println!("Enter borrower's name");
-                let mut borrower_name = String::new();
-                io::stdin().read_line(&mut borrower_name).expect("Failed to read line");
-
                 println!("Enter an ISBN (or type 'exit' to quit):");
         
                 let mut input = String::new();
                 io::stdin().read_line(&mut input).expect("Failed to read line");
+
+                println!("Enter borrower's name");
+                let mut borrower_name = String::new();
+                io::stdin().read_line(&mut borrower_name).expect("Failed to read line");                
         
                 // Trim whitespace and convert to lowercase for case-insensitive comparison
                 let input = input.trim().to_lowercase();

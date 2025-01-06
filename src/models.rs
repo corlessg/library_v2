@@ -24,7 +24,7 @@ pub struct Book {
     key: Option<String>,
     title: String,
     subtitle: Option<String>,
-    authors: Vec<Author>,
+    authors: Option<Vec<Author>>,
     number_of_pages: Option<u32>,
     publish_date: Option<String>,
     subjects: Option<Vec<Subject>>,

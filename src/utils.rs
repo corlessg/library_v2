@@ -9,29 +9,30 @@ use crate::models::Book;
 // To be used in things...
 
 // Function to call the Open Library API returning an error message if it fails to find the book and the response text if it does find the book
-pub async fn call_openlibrary_api(isbn: &String) -> Result<Response, reqwest::Error> {
+pub async fn fetch_book_details(isbn: String) -> Result<String, String> {
+    let url = format!(
+        "https://openlibrary.org/api/books?bibkeys=ISBN:{}&jscmd=data&format=json",
+        isbn
+    );
 
-    // let url: String = "https://openlibrary.org/isbn/".to_owned() + isbn + ".json".to_owned();
-    let url: String = format!("https://openlibrary.org/api/books?bibkeys=ISBN:{}&jscmd=data&format=json",isbn);
-    
-    // Use the reqwest library to send a GET request to the API endpoint
-    reqwest::get(url).await
-    
-}
-pub async fn book_details_api(isbn: String) -> Result<Response,String> {
+    // Send a GET request to the Open Library API
+    let response = reqwest::get(&url).await.map_err(|err| format!("Error calling OpenLibrary API: {}", err))?;
 
-    let res = call_openlibrary_api(&isbn).await;
-    match res {
-        Ok(response) => {
-            match response.status() {
-                StatusCode::OK => Ok(response),
-                StatusCode::NOT_FOUND => Err("Book was not found".to_string()),
-                _ => Err(format!("Unexpected status code: {}",response.status())),
+    // Check the status code
+    match response.status() {
+        StatusCode::OK => {
+            let text = response.text().await.map_err(|err| format!("Error reading response text: {}", err))?;
+            if text.trim() == "{}" {
+                Err("Book was not found".to_string())
+            } else {
+                Ok(text)
             }
         }
-        Err(err) => Err(format!("Error calling OpenLibrary API: {}",err)),
+        StatusCode::NOT_FOUND => Err("Book was not found".to_string()),
+        _ => Err(format!("Unexpected status code: {}", response.status())),
     }
-} 
+}
+
 
 
 pub fn modify_json_structure(json_str: &str) -> Result<String,String> {
@@ -41,16 +42,22 @@ pub fn modify_json_structure(json_str: &str) -> Result<String,String> {
     if let Some((isbn_key, inner_json)) = json_value.as_object_mut().and_then(|obj| obj.iter_mut().next()) {
 
         // Add the attribute of ID to be the unique identifier for MongoDB using the ISBN
-        let id = isbn_key.split(":").last().unwrap();
-        inner_json["_id"] = Value::String(id.to_string());
+        let id = isbn_key.split(":").last();
+        match id {
+            Some(id) => {
+                inner_json["_id"] = Value::String(id.to_string());
 
-        //Parse into book Struct
-        let book: Book = serde_json::from_value(inner_json.clone()).expect("Failed to parse into Book struct");
+                //Parse into book Struct
+                let book: Book = serde_json::from_value(inner_json.clone()).expect("Failed to parse into Book struct");
+                
+                Ok(serde_json::to_string_pretty(&book).expect("Failed to serialize final JSON"))
+            },
+            _ => Err(format!("could not split the isbn key: {}",isbn_key))
+        }
         
-        Ok(serde_json::to_string_pretty(&book).expect("Failed to serialize final JSON"))
     }
     else {
-        Err(format!("Error calling OpenLibrary API"))
+        Err(format!("Error modifying the JSON response: {}",json_str))
     }
 }
 
