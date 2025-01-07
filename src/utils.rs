@@ -1,7 +1,6 @@
 use bson::Document;
-use reqwest::{StatusCode,Response};
+use reqwest::StatusCode;
 use serde_json::Value;
-use mongodb::{options::{ClientOptions, ResolverConfig}, Client};
 
 
 use crate::models::Book;

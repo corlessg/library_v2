@@ -61,9 +61,11 @@ pub async fn remove_book(isbn: String) {
     }
 }
 
-pub async fn update_book(isbn: String, ) {
 
-}
+// TODO GPC
+// pub async fn update_book(isbn: String, ) {
+
+// }
 
 pub async fn checkout_book(isbn: String, borrower: String) {
     let mut c = load_mongo_client().await;
@@ -75,10 +77,11 @@ pub async fn checkout_book(isbn: String, borrower: String) {
             if book.matched_count == 0 {
                 println!("Book {:?} not found!", &isbn)
             } else {
-                println!("Successfully removed the book: {:?}! ", book)
+                println!("Successfully checkedout the book: {:?}! ", book)
             }
 
-        Err(book) => println!("Could not remove the book to the library due to: {:?} ", book)
+        Err(book) => println!("Could not checkout the book from the library due to: {:?} ", book.get_custom::<String>()
+    .expect("Problem parsing custom error"))
     }
 }
 
@@ -86,16 +89,17 @@ pub async fn checkin_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
     let book: Result<UpdateResult, Error> = LibraryRespository::checkin_book(&mut c, &isbn).await;
-
+    
     match book {
-        Ok(book) => 
+        Ok(book) => {
             if book.matched_count == 0 {
                 println!("Book {:?} not found!", isbn)
             } else {
                 println!("Successfully removed the book: {:?}! ", book)
             }
-
-        Err(book) => println!("Could not remove the book to the library due to: {:?} ", book)
+        },
+        Err(book) => println!("Could not check the book into the library due to: {:?} ", book.get_custom::<String>()
+        .expect("Problem parsing custom error"))
     }
 }
 
@@ -132,7 +136,7 @@ pub async fn batch_upload(file_path: &str) {
                         } else {
                             continue
                         },
-                        Err(e) => println!("Error adding book")
+                        Err(e) => println!("Error while adding book: {}",e)
                     }
                 } else {
                     println!("error parsing line")

@@ -3,7 +3,7 @@ use mongodb::{error::Error, results::{DeleteResult, InsertOneResult, UpdateResul
 use bson::{doc, Bson, Document};
 use rocket::futures::TryStreamExt;
 
-use crate::{models::{Book, Location}, rocket_routes::books::delete_book, utils};
+use crate::{models::{Book, Location}, utils};
 
 pub struct LibraryRespository;
 
@@ -97,7 +97,9 @@ impl LibraryRespository {
                 Ok(status) if status == "CheckedOut" => {
                     // Use unwrap because high confidence of existing borrower if CheckedOut
                     let borrower = book.get_str("borrower").unwrap_or("Unknown borrower").to_string();
-                    return Err(Error::custom(format!("Could not check out book {:?}: Already checked out by {}",book_name, borrower)))
+                    return Err(Error::custom(
+                        format!("Could not check out book {:?}: Already checked out by {}",
+                        book_name.expect("Problem retriving book name"), borrower)))
                 },
                 Ok(_) => {
                     println!("Book is available.");
@@ -131,7 +133,7 @@ impl LibraryRespository {
 
            match book.get_str("checked_status") {
                 Ok(status) if status == "CheckedIn" => {
-                    return Err(Error::custom(format!("Book {:?} has already been checked in",book_name)))
+                    return Err(Error::custom(format!("Book {:?} has already been checked in",book_name.expect("Couldn't find book title"))))
                 },
                 Ok(_) => {
                     println!("Book is available.");
@@ -144,6 +146,8 @@ impl LibraryRespository {
         }
         
     }
+
+    
     pub async fn find_random_books(c: &mut Client) -> Result<Vec<Document>, Error> {
         let search = doc! { "$sample": { "size": 5 } };
 

@@ -1,142 +1,116 @@
 use std::io;
 use crate::commands;
 
-// TODO @GPC could clean up a lot of repeated code
-
 pub async fn scan_books() {
-    
-    // choose an operating mode... query, check-in, check-out
+    loop {
+        println!("Query, add, checkin, or checkout books? (or type 'exit' to quit the program at any time):");
 
-    println!("Query, add, checkin or checkout books? (or type 'exit' to quit):");
+        let action = read_user_input().trim().to_lowercase();
 
-    let mut action = String::new();
-    io::stdin().read_line(&mut action).expect("Failed to read line");
-
-    let action_list = ["query","checkin","checkout","exit"];
-
-    // Trim whitespace and convert to lowercase for case-insensitive comparison
-    action = action.trim().to_lowercase();
-
-    if action_list.contains(&action.as_str()) {
-        if action == "exit" {
-            println!("Exiting the program.");
-        }else if action == "query" {
-            loop {
-                println!("Enter an ISBN (or type 'exit' to quit):");
-        
-                let mut input = String::new();
-                io::stdin().read_line(&mut input).expect("Failed to read line");
-                
-                let input = input.trim().to_lowercase();
-
-                if input == "exit" {
-                    println!("Exiting the program.");
-                    break;
-                }
-
-
-                // Parse the input as a number
-                match input.parse::<i64>() {
-                    Ok(number) => {
-                        commands::find_book(number.to_string()).await;
-                    }
-                    Err(_) => {
-                        println!("Invalid input. Please enter a valid ISBN number or 'exit'.");
-                    }
-                }
-
+        match action.as_str() {
+            "exit" => {
+                println!("Exiting the program.");
+                std::process::exit(0);
             }
+            "query" => query_books().await,
+            "checkin" => checkin_books().await,
+            "checkout" => checkout_books().await,
+            "add" => add_books().await,
+            _ => println!("You did not choose an acceptable action."),
         }
-        else if action == "checkin" {
-            loop {
-                println!("Enter an ISBN (or type 'exit' to quit):");
-        
-                let mut input = String::new();
-                io::stdin().read_line(&mut input).expect("Failed to read line");
-        
-                // Trim whitespace and convert to lowercase for case-insensitive comparison
-                let input = input.trim().to_lowercase();
-        
-                if input == "exit" {
-                    println!("Exiting the program.");
-                    break;
-                }
-        
-                // Parse the input as a number
-                match input.parse::<i64>() {
-                    Ok(number) => {
-                        commands::checkin_book(number.to_string()).await;
-                    }
-                    Err(_) => {
-                        println!("Invalid input. Please enter a valid ISBN number or 'exit'.");
-                    }
-                }
-            }
-        }
-        else if action == "checkout" {
-            loop {
-                println!("Enter an ISBN (or type 'exit' to quit):");
-        
-                let mut input = String::new();
-                io::stdin().read_line(&mut input).expect("Failed to read line");
-
-                println!("Enter borrower's name");
-                let mut borrower_name = String::new();
-                io::stdin().read_line(&mut borrower_name).expect("Failed to read line");                
-        
-                // Trim whitespace and convert to lowercase for case-insensitive comparison
-                let input = input.trim().to_lowercase();
-        
-                if input == "exit" {
-                    println!("Exiting the program.");
-                    break;
-                }
-        
-                // Parse the input as a number
-                match input.parse::<i64>() {
-                    Ok(number) => {
-                        commands::checkout_book(number.to_string(),borrower_name).await;
-                    }
-                    Err(_) => {
-                        println!("Invalid input. Please enter a valid ISBN number or 'exit'.");
-                    }
-                }
-            }
-        }
-        else if action == "add" {
-            loop {
-
-                println!("Enter an ISBN (or type 'exit' to quit):");
-        
-                let mut input = String::new();
-                io::stdin().read_line(&mut input).expect("Failed to read line");
-        
-                // Trim whitespace and convert to lowercase for case-insensitive comparison
-                let input = input.trim().to_lowercase();
-        
-                if input == "exit" {
-                    println!("Exiting the program.");
-                    break;
-                }
-        
-                // Parse the input as a number
-                match input.parse::<i64>() {
-                    Ok(number) => {
-                        commands::add_book(number.to_string()).await;
-                    }
-                    Err(_) => {
-                        println!("Invalid input. Please enter a valid ISBN number or 'exit'.");
-                    }
-                }
-            }
-        }
-        
     }
-    else {
-
-        println!("You did not choose an acceptable action."); 
-    }
-    
-    
-    
 }
+
+async fn query_books() {
+    loop {
+        println!("Enter an ISBN (or type 'return' to return to the main menu");
+        let input = read_user_input().trim().to_lowercase();
+
+        if input == "return" {
+            break;
+        } else if input == "exit" {
+            println!("Exiting the program.");
+            std::process::exit(0);
+        }
+
+        match input.parse::<i64>() {
+            Ok(isbn) => {
+                commands::find_book(isbn.to_string()).await;
+            }
+            Err(_) => println!("Invalid input. Please enter a valid ISBN number, 'return', or 'exit'."),
+        }
+    }
+}
+
+async fn checkin_books() {
+    loop {
+        println!("Enter an ISBN (or type 'return' to return to the main menu):");
+        let input = read_user_input().trim().to_lowercase();
+
+        if input == "return" {
+            break;
+        } else if input == "exit" {
+            println!("Exiting the program.");
+            std::process::exit(0);
+        }
+
+        match input.parse::<i64>() {
+            Ok(isbn) => {
+                commands::checkin_book(isbn.to_string()).await;
+            }
+            Err(_) => println!("Invalid input. Please enter a valid ISBN number, 'return', or 'exit'."),
+        }
+    }
+}
+
+async fn checkout_books() {
+    loop {
+        println!("Enter an ISBN (or type 'return' to return to the main menu:");
+        let isbn_input = read_user_input().trim().to_lowercase();
+
+        if isbn_input == "return" {
+            break;
+        } else if isbn_input == "exit" {
+            println!("Exiting the program.");
+            std::process::exit(0);
+        }
+
+        println!("Enter borrower's name:");
+        let borrower_name = read_user_input().trim().to_string();
+
+        match isbn_input.parse::<i64>() {
+            Ok(isbn) => {
+                commands::checkout_book(isbn.to_string(), borrower_name).await;
+            }
+            Err(_) => println!("Invalid input. Please enter a valid ISBN number, 'return', or 'exit'."),
+        }
+    }
+}
+
+async fn add_books() {
+    loop {
+        println!("Enter an ISBN (or type 'return' to return to the main menu:");
+        let input = read_user_input().trim().to_lowercase();
+
+        if input == "return" {
+            break;
+        } else if input == "exit" {
+            println!("Exiting the program.");
+            std::process::exit(0);
+        }
+
+        match input.parse::<i64>() {
+            Ok(isbn) => {
+                commands::add_book(isbn.to_string()).await;
+            }
+            Err(_) => println!("Invalid input. Please enter a valid ISBN number, 'return', or 'exit'."),
+        }
+    }
+}
+
+fn read_user_input() -> String {
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Failed to read line");
+    input
+}
+
