@@ -73,7 +73,7 @@ impl LibraryRespository {
         books.update_one(filter, new_loc, None).await
     }
 
-    pub async fn checkout_book(c: &mut Client, isbn: &String, borrower: String) -> Result<UpdateResult, Error> {
+    pub async fn checkout_book(c: &mut Client, isbn: &String, borrower: String) -> Result<(UpdateResult,String), Error> {
         let books: Collection<Document> = c.database("library").collection("books");
         // Check to make sure book exists in library
 
@@ -103,7 +103,8 @@ impl LibraryRespository {
                 },
                 Ok(_) => {
                     println!("Book is available.");
-                    books.update_one(filter, book_update, None).await
+                    let result = books.update_one(filter, book_update, None).await?;
+                    Ok((result,book_name.expect("problem retrieving book name").to_string()))
                 },
                 Err(e) => Err(Error::custom(format!("Error {} checking out book: {:?}",e,book_name)))
            }

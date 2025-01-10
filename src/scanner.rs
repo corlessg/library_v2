@@ -1,7 +1,12 @@
 use std::io;
 use crate::commands;
 
+// TODO GPC - make the return values say the names of the books - follow pattern for the checkin process!!
+// TODO GPC - add the locations when adding book(s) batch and single
+
+
 pub async fn scan_books() {
+    print!("\x1B[2J\x1B[1;1H");
     loop {
         println!("Query, add, checkin, or checkout books? (or type 'exit' to quit the program at any time):");
 

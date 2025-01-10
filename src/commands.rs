@@ -68,19 +68,19 @@ pub async fn remove_book(isbn: String) {
 // }
 
 pub async fn checkout_book(isbn: String, borrower: String) {
-    let mut c = load_mongo_client().await;
+    let mut c = load_mongo_client().await;    
+    
+    let book_update: Result<(UpdateResult,String), Error> = LibraryRespository::checkout_book(&mut c, &isbn, borrower).await;
 
-    let book: Result<UpdateResult, Error> = LibraryRespository::checkout_book(&mut c, &isbn, borrower).await;
-
-    match book {
-        Ok(book) => 
-            if book.matched_count == 0 {
-                println!("Book {:?} not found!", &isbn)
+    match book_update {
+        Ok((update, book_name)) => 
+            if update.matched_count == 0 {
+                println!("book_name {:?} not found!", &isbn)
             } else {
-                println!("Successfully checkedout the book: {:?}! ", book)
+                println!("Successfully checkedout the book: {:?}! ", book_name)
             }
 
-        Err(book) => println!("Could not checkout the book from the library due to: {:?} ", book.get_custom::<String>()
+        Err(err) => println!("Could not checkout the book from the library due to: {:?} ", err.get_custom::<String>()
     .expect("Problem parsing custom error"))
     }
 }
