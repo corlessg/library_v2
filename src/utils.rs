@@ -1,7 +1,7 @@
 use bson::Document;
 use reqwest::StatusCode;
 use serde_json::Value;
-
+use std::io;
 
 use crate::models::Book;
 
@@ -68,4 +68,10 @@ pub fn json_to_bson(json_str: &str) -> Result<Document, serde_json::Error> {
     let bson_document = bson::to_document(&json_value);
 
     Ok(bson_document.expect("Couldn't convert json to bson"))
+}
+
+pub fn read_user_input() -> String {
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Failed to read line");
+    input
 }

@@ -10,6 +10,7 @@ pub struct LibraryRespository;
 
 impl LibraryRespository {
     
+    // TODO - why is this returning an option<Doc> rather than a clean doc?
     pub async fn find_book_isbn(c: &mut Client, isbn: &String) -> Result<Option<Document>,Error> {
         
         let books = c.database("library").collection("books");
@@ -46,7 +47,9 @@ impl LibraryRespository {
         let details_edited = details.replacen("ISBN", "_id", 1);
     
         let details_edited_flat = utils::modify_json_structure(details_edited.as_str());
-    
+
+
+        //TODO fix this mess of unwraps GPC 
         let new_doc = utils::json_to_bson(details_edited_flat.as_ref().unwrap().as_str()).unwrap();
     
         let books = c.database("library").collection("books");
@@ -61,10 +64,10 @@ impl LibraryRespository {
         
         let books: Collection<Book> = c.database("library").collection("books");
         let filter = doc! { "_id": isbn };
-        
+                
         let mut new_loc_doc = Document::new();
 
-        new_loc_doc.insert("location.house",Bson::String(loc.house));
+        new_loc_doc.insert("location.house",Bson::String(loc.house.to_string()));
         new_loc_doc.insert("location.room",Bson::String(loc.room));
         new_loc_doc.insert("location.owner",Bson::String(loc.owner));
 
@@ -113,7 +116,7 @@ impl LibraryRespository {
         }
    
     }
-    pub async fn checkin_book(c: &mut Client, isbn: &String) -> Result<UpdateResult, Error> {
+    pub async fn checkin_book(c: &mut Client, isbn: &String) -> Result<(UpdateResult, String), Error> {
         let books: Collection<Document> = c.database("library").collection("books");
         // Check to make sure book exists in library
 
@@ -138,7 +141,9 @@ impl LibraryRespository {
                 },
                 Ok(_) => {
                     println!("Book is available.");
-                    books.update_one(filter, book_update, None).await
+                    let update = books.update_one(filter, book_update, None).await?;
+
+                    Ok((update,book_name.expect("could not identify the book").to_string()))
                 },
                 Err(e) => Err(Error::custom(format!("Error {} checking in book: {:?}",e,book_name)))
            }
@@ -164,6 +169,20 @@ impl LibraryRespository {
         
         Ok(result)
 
+    }
+
+    pub async fn find_checked_out_books(c: &mut Client) -> Result<Vec<Document>,Error> {
+        let books: Collection<Document> = c.database("library").collection("books");
+        let query = doc! {"checked_status":"CheckedOut"};
+        
+        let mut book_query = books.find(query, None).await?;
+        
+        let mut result: Vec<Document> = Vec::new();
+
+        while let Some(book) = book_query.try_next().await? {
+            result.push(book);
+        }
+        Ok(result)
     }
 
 

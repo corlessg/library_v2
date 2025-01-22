@@ -1,8 +1,27 @@
 // models lists all necessary structs we expect to need in our database
 // these will be derived from what is returned calling the ISBN API
 
+use core::fmt;
 
 use serde::{Deserialize,Serialize};
+
+// TODO GPC in theory, you should add this enumeration to all locations... 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum HouseLocations {
+    Mars,
+    Bethany
+}
+
+impl fmt::Display for HouseLocations {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let house_loc = match self {
+            HouseLocations::Bethany => "Bethany",
+            HouseLocations::Mars => "Mars"
+        };
+        write!(f, "{}", house_loc)
+    }
+}
+
 
 #[derive(Debug,Serialize, Deserialize)]
 pub enum CheckedStatus {
@@ -57,10 +76,11 @@ struct Subject {
     // url: Option<String>,
 }
 
+// TODO: In thoery this should be address, state, etc. but not putting that onto Github...
 #[allow(warnings)]
 #[derive(Debug,Serialize, Deserialize)]
 pub struct Location {
-    pub house: String,
+    pub house: HouseLocations,
     pub room: String,
     pub owner: String
 }
@@ -68,7 +88,7 @@ pub struct Location {
 impl Default for Location {
     fn default() -> Self {
         Self {
-            house: "Mars".to_string(),
+            house: HouseLocations::Mars,
             room: "Library".to_string(),
             owner: "Garrett".to_string()
         }

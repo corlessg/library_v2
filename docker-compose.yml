@@ -13,9 +13,11 @@ services:
     build: .
     environment:
       - DATABASE_URL=mongodb://user:pass@mongodb/library
-      - ROCKET_DATABASES={mongodb={url=mongodb://user:pass@mongodb/library?authSource=admin}}
+      - ROCKET_DATABASES={mongodb={url=mongodb://user:pass@mongodb/library?authSource=admin}} 
+      - ROCKET_ADDRESS=0.0.0.0  # Bind Rocket to all interfaces
+      - ROCKET_PORT=8000        # Ensure Rocket listens on the expected port
     ports:
-      - 8000:8000
+      - 8080:8000  
     volumes:
       - ./:/app
 

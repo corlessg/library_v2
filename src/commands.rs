@@ -4,7 +4,7 @@ use csv::ReaderBuilder;
 
 use mongodb::{error::Error, results::{DeleteResult, UpdateResult}, Client};
 
-use crate::repositories::LibraryRespository;
+use crate::{models::Location, repositories::LibraryRespository, utils::read_user_input};
 
 
 
@@ -61,7 +61,6 @@ pub async fn remove_book(isbn: String) {
     }
 }
 
-
 // TODO GPC
 // pub async fn update_book(isbn: String, ) {
 
@@ -88,14 +87,14 @@ pub async fn checkout_book(isbn: String, borrower: String) {
 pub async fn checkin_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
-    let book: Result<UpdateResult, Error> = LibraryRespository::checkin_book(&mut c, &isbn).await;
+    let book: Result<(UpdateResult, String), Error> = LibraryRespository::checkin_book(&mut c, &isbn).await;
     
     match book {
-        Ok(book) => {
+        Ok((book,book_name)) => {
             if book.matched_count == 0 {
-                println!("Book {:?} not found!", isbn)
+                println!("Book {:?} not found!", book_name)
             } else {
-                println!("Successfully removed the book: {:?}! ", book)
+                println!("Successfully removed the book: {:?}! ", book_name)
             }
         },
         Err(book) => println!("Could not check the book into the library due to: {:?} ", book.get_custom::<String>()
@@ -105,6 +104,20 @@ pub async fn checkin_book(isbn: String) {
 
 pub async fn batch_upload(file_path: &str) {
     let mut c = load_mongo_client().await;
+
+    // This should scale better and be derived from an enum
+    // println!("Where are these books stored? (Mars or Bethany)");
+// 
+    // let input = read_user_input().trim().to_lowercase();
+
+    // let loc = Location {
+    //     house: input.to_string(),
+    //     room: "library".to_string(),
+    //     owner: "Garrett".to_string()
+    // };
+
+
+    
 
     //read file path
     let path = Path::new(file_path);
@@ -126,13 +139,16 @@ pub async fn batch_upload(file_path: &str) {
                 if let Ok(record) = result {
                     let isbn = record.get(0).expect("error parsing line");
                     let book_search = LibraryRespository::find_book_isbn(&mut c, &isbn.to_string()).await;
-
+                    
                     match book_search {
                         Ok(book) => if book.is_none() {
                             println!("Adding: {}",isbn);
                             if let Err(_) = LibraryRespository::create_book(&mut c, isbn.to_string()).await {
                                 println!("Cannot add: {}.. moving on", isbn);
                             }
+                            // if let Err(_) = LibraryRespository::update_book_location(&mut c, isbn.to_string(), loc_tar).await {
+                            //     println!("Cannot update {}'s location... moving on",isbn);
+                            // }
                         } else {
                             continue
                         },

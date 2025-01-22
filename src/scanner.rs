@@ -1,5 +1,5 @@
-use std::io;
 use crate::commands;
+use crate::utils::read_user_input;
 
 // TODO GPC - make the return values say the names of the books - follow pattern for the checkin process!!
 // TODO GPC - add the locations when adding book(s) batch and single
@@ -113,9 +113,5 @@ async fn add_books() {
     }
 }
 
-fn read_user_input() -> String {
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read line");
-    input
-}
+
 
