@@ -25,46 +25,79 @@ impl LibraryRespository {
         Ok(result)
     }
 
-    pub async fn delete_book_isbn(c: &mut Client, isbn: &String) -> Result<DeleteResult,Error> {
-        let books: Collection<Book> = c.database("library").collection("books");
+    pub async fn find_book_title(c: &mut Client, title: &String) -> Result<Vec<Document>,Error> {
+        
+        let books = c.database("library").collection("books");
 
-        let filter = doc! { "_id": isbn };
+        let filter = doc! { "title": title };
         // Optional: Specify additional options, such as projection or other query options
         // let options = FindOneOptions::builder().build();
 
-        // Find the document by ISBN
-        let result = books.delete_one(filter, None).await?;
+        // Find the document by TITLE
+        let mut books = books.find(filter, None).await?;
+
+        let mut result: Vec<Document> = Vec::new();
+
+        while let Some(doc) = books.try_next().await? {
+            result.push(doc);
+        }
 
         Ok(result)
     }
 
-    pub async fn create_book(c: &mut Client,isbn: String) -> Result<InsertOneResult,Error> {
-        let details = utils::fetch_book_details(isbn).await
+    pub async fn delete_book_isbn(c: &mut Client, isbn: &String) -> Result<(DeleteResult,String),Error> {
+        let books: Collection<Book> = c.database("library").collection("books");
+
+        let filter = doc! { "_id": &isbn };
+        // Optional: Specify additional options, such as projection or other query options
+        // let options = FindOneOptions::builder().build();
+        let book = books.find_one(filter.clone(), None).await?;
+
+        let book_name = book.map(|b| b.title.clone())
+            .expect(format!("When attempting to delete {} title could not be found to delete",isbn).as_str());
+        // Find the document by ISBN
+        let result = books.delete_one(filter, None).await?;
+
+        Ok((result,book_name))
+    }
+
+    pub async fn create_book(c: &mut Client,isbn: String) -> Result<(InsertOneResult,String),Error> {
+        let details = utils::fetch_book_details(isbn.clone()).await
         .map_err(|e| Error::custom(format!("API Error {}",e)))?;
 
         
         // this fixes the ISBN number name to be _id which is the unique identifier field automatically used by mongoDB        
         let details_edited = details.replacen("ISBN", "_id", 1);
     
-        let details_edited_flat = utils::modify_json_structure(details_edited.as_str());
+        let details_edited_flat = utils::modify_json_structure(details_edited.as_str())
+            .expect("Failed to flatten the JSON details returned by OpenLibrary's API");
 
+        let new_doc = utils::json_to_bson(details_edited_flat.as_str())
+            .expect("Failed to convert JSON to BSON following the OpenLib API call");
+        
+        let book_name = new_doc.get_str("title")
+            .expect(format!("Could not resolve title name from book {}",isbn)
+            .as_str())
+            .to_string();
 
-        //TODO fix this mess of unwraps GPC 
-        let new_doc = utils::json_to_bson(details_edited_flat.as_ref().unwrap().as_str()).unwrap();
-    
         let books = c.database("library").collection("books");
         
         let result = books.insert_one(new_doc, None).await?;
 
-        Ok(result)
+        Ok((result,book_name))
                 
     }
 
-    pub async fn update_book_location(c: &mut Client, isbn: String, loc: Location) -> Result<UpdateResult,Error> {
+    pub async fn update_book_location(c: &mut Client, isbn: String, loc: Location) -> Result<(UpdateResult,String),Error> {
         
         let books: Collection<Book> = c.database("library").collection("books");
-        let filter = doc! { "_id": isbn };
-                
+        let filter = doc! { "_id": &isbn };
+        
+        let book = books.find_one(filter.clone(), None).await?;
+
+        let book_name = book.map(|b| b.title.clone())
+            .expect(format!("Could not resolve book name while updating {}",isbn).as_str());
+
         let mut new_loc_doc = Document::new();
 
         new_loc_doc.insert("location.house",Bson::String(loc.house.to_string()));
@@ -73,7 +106,9 @@ impl LibraryRespository {
 
         let new_loc = doc! {"$set": new_loc_doc };
 
-        books.update_one(filter, new_loc, None).await
+        let result = books.update_one(filter, new_loc, None).await?;
+
+        Ok((result,book_name))
     }
 
     pub async fn checkout_book(c: &mut Client, isbn: &String, borrower: String) -> Result<(UpdateResult,String), Error> {
@@ -116,6 +151,8 @@ impl LibraryRespository {
         }
    
     }
+
+
     pub async fn checkin_book(c: &mut Client, isbn: &String) -> Result<(UpdateResult, String), Error> {
         let books: Collection<Document> = c.database("library").collection("books");
         // Check to make sure book exists in library

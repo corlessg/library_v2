@@ -41,7 +41,7 @@ pub struct Book {
     _id: String,
     url: Option<String>,
     key: Option<String>,
-    title: String,
+    pub title: String,
     subtitle: Option<String>,
     authors: Option<Vec<Author>>,
     number_of_pages: Option<u32>,

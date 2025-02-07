@@ -60,12 +60,12 @@ match matches.subcommand() {
             search_matches.get_one::<String>("isbn").unwrap().to_owned()
         ).await
         ),
-        // Some(("title",search_matches)) => 
-        // println!("{:?}",
-        // LibraryRespository::::commands::find_book_title(
-        //     search_matches.get_one::<String>("title").unwrap().to_owned()
-        // ).await
-        // ),
+        Some(("title",search_matches)) => 
+        println!("{:?}",
+        commands::find_books_title(
+            search_matches.get_one::<String>("title").unwrap().to_owned()
+        ).await
+        ),
         _ => {}
     },
     // TODO: Create a way to store location of book

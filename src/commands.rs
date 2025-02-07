@@ -1,10 +1,9 @@
 
 use std::{fs::File, io::BufReader, path::Path};
 use csv::ReaderBuilder;
-
 use mongodb::{error::Error, results::{DeleteResult, UpdateResult}, Client};
 
-use crate::{models::Location, repositories::LibraryRespository, utils::read_user_input};
+use crate::repositories::LibraryRespository;
 
 
 
@@ -30,6 +29,22 @@ pub async fn find_book(isbn: String) {
     }
 }
 
+pub async fn find_books_title(isbn: String) {
+    let mut c = load_mongo_client().await;
+
+    let results = LibraryRespository::find_book_title(&mut c, &isbn).await;
+
+    //TODO! if None is returned, we need to alert instead of saying found None!
+    match results {
+        Ok(results) => { 
+            for book in results {
+                println!("Book {} found!", book);
+            }
+        },
+        Err(book) => println!("Could not find the book to the library due to: {:?} ", book)
+    }
+}
+
 pub async fn add_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
@@ -38,8 +53,8 @@ pub async fn add_book(isbn: String) {
     // TODO make sure we tell the user what book they just input into the system!
 
     match book {
-        Ok(book) => println!("Successfully added the book: {:?}! ", book),
-        Err(book) => println!("Could not add the book to the library due to: {:?} ", book)
+        Ok((_,book_name)) => println!("Successfully added the book: {:?}! ", book_name),
+        Err(e) => println!("Could not add the book to the library due to: {:?} ", e)
     }
 
 }
@@ -47,17 +62,17 @@ pub async fn add_book(isbn: String) {
 pub async fn remove_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
-    let book: Result<DeleteResult, Error> = LibraryRespository::delete_book_isbn(&mut c, &isbn).await;
+    let book = LibraryRespository::delete_book_isbn(&mut c, &isbn).await;
     
     match book {
-        Ok(book) => 
+        Ok((book,book_name)) => 
             if book.deleted_count == 0 {
-                println!("Book {:?} not found!", isbn)
+                println!("Book {:?} not found!", book_name)
             } else {
-                println!("Successfully removed the book: {:?}! ", book)
+                println!("Successfully removed the book: {:?}! ", book_name)
             }
 
-        Err(book) => println!("Could not remove the book to the library due to: {:?} ", book)
+        Err(e) => println!("Could not remove the book to the library due to: {:?} ", e)
     }
 }
 
@@ -115,9 +130,6 @@ pub async fn batch_upload(file_path: &str) {
     //     room: "library".to_string(),
     //     owner: "Garrett".to_string()
     // };
-
-
-    
 
     //read file path
     let path = Path::new(file_path);
