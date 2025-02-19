@@ -1,7 +1,6 @@
-use crate::commands;
+use crate::{commands, models};
 use crate::utils::read_user_input;
 
-// TODO GPC - make the return values say the names of the books - follow pattern for the checkin process!!
 // TODO GPC - add the locations when adding book(s) batch and single
 
 
@@ -104,8 +103,12 @@ async fn add_books() {
             std::process::exit(0);
         }
 
+        
+
         match input.parse::<i64>() {
             Ok(isbn) => {
+
+
                 commands::add_book(isbn.to_string()).await;
             }
             Err(_) => println!("Invalid input. Please enter a valid ISBN number, 'return', or 'exit'."),
@@ -114,4 +117,29 @@ async fn add_books() {
 }
 
 
+// TODO GPC - fix this by implementing static slices as variants() on the houselocations enum in models
+
+// fn get_location() -> models::HouseLocations {
+    // loop {
+    //     println!("Select a house location:");
+
+    //     // Dynamically list all available locations
+    //     for &option in HouseLocations::variants() {
+    //         println!("- {}", option);
+    //     }
+
+    //     print!("Enter your choice: ");
+    //     io::stdout().flush().unwrap(); // Ensure the prompt is displayed
+
+    //     let mut input = String::new();
+    //     io::stdin().read_line(&mut input).unwrap();
+    //     let input = input.trim();
+
+    //     match HouseLocations::from_str(input) {
+    //         Ok(location) => return location,
+    //         Err(_) => println!("Invalid choice. Please enter one of the listed locations."),
+    //     }
+    // }
+
+// }
 

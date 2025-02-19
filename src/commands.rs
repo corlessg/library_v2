@@ -109,7 +109,7 @@ pub async fn checkin_book(isbn: String) {
             if book.matched_count == 0 {
                 println!("Book {:?} not found!", book_name)
             } else {
-                println!("Successfully removed the book: {:?}! ", book_name)
+                println!("Successfully checked in the book: {:?}! ", book_name)
             }
         },
         Err(book) => println!("Could not check the book into the library due to: {:?} ", book.get_custom::<String>()
