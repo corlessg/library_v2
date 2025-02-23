@@ -2,8 +2,9 @@
 use std::{fs::File, io::BufReader, path::Path};
 use csv::ReaderBuilder;
 use mongodb::{error::Error, results::{DeleteResult, UpdateResult}, Client};
+use tokio::task::LocalEnterGuard;
 
-use crate::repositories::LibraryRespository;
+use crate::{models::HouseLocations, repositories::LibraryRespository, utils};
 
 
 
@@ -18,27 +19,30 @@ pub async fn find_book(isbn: String) {
 
     let book = LibraryRespository::find_book_isbn(&mut c, &isbn).await;
 
-    //TODO! if None is returned, we need to alert instead of saying found None!
     match book {
         Ok(book) => if book.is_none() {
             println!("Book {:?} not found!", isbn)
         } else {
             println!("Successfully found the book! \n {:?} ", book)
         },
-        Err(book) => println!("Could not find the book to the library due to: {:?} ", book)
+        Err(e) => println!("Could not find the book to the library due to: {:?} ", e)
     }
 }
 
-pub async fn find_books_title(isbn: String) {
+pub async fn find_books_title(title: String) {
     let mut c = load_mongo_client().await;
 
-    let results = LibraryRespository::find_book_title(&mut c, &isbn).await;
+    let results = LibraryRespository::find_book_title(&mut c, &title).await;
 
     //TODO! if None is returned, we need to alert instead of saying found None!
     match results {
         Ok(results) => { 
-            for book in results {
-                println!("Book {} found!", book);
+            if results.is_empty() {
+                println!("No books found with title: {}", title)
+            } else {
+                for book in results {
+                    println!("Book {} found!", book);
+                }
             }
         },
         Err(book) => println!("Could not find the book to the library due to: {:?} ", book)
@@ -49,8 +53,6 @@ pub async fn add_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
     let book = LibraryRespository::create_book(&mut c, isbn).await;
-
-    // TODO make sure we tell the user what book they just input into the system!
 
     match book {
         Ok((_,book_name)) => println!("Successfully added the book: {:?}! ", book_name),
@@ -76,8 +78,8 @@ pub async fn remove_book(isbn: String) {
     }
 }
 
-// TODO GPC
-// pub async fn update_book(isbn: String, ) {
+// // TODO GPC
+// pub async fn update_book(isbn: String, location: Location) {
 
 // }
 
@@ -120,16 +122,7 @@ pub async fn checkin_book(isbn: String) {
 pub async fn batch_upload(file_path: &str) {
     let mut c = load_mongo_client().await;
 
-    // This should scale better and be derived from an enum
-    // println!("Where are these books stored? (Mars or Bethany)");
-// 
-    // let input = read_user_input().trim().to_lowercase();
-
-    // let loc = Location {
-    //     house: input.to_string(),
-    //     room: "library".to_string(),
-    //     owner: "Garrett".to_string()
-    // };
+    let house = utils::input_house_location();
 
     //read file path
     let path = Path::new(file_path);
@@ -155,12 +148,9 @@ pub async fn batch_upload(file_path: &str) {
                     match book_search {
                         Ok(book) => if book.is_none() {
                             println!("Adding: {}",isbn);
-                            if let Err(_) = LibraryRespository::create_book(&mut c, isbn.to_string()).await {
+                            if let Err(_) = LibraryRespository::create_book(&mut c, isbn.to_string(),Some(house.to_string())).await {
                                 println!("Cannot add: {}.. moving on", isbn);
                             }
-                            // if let Err(_) = LibraryRespository::update_book_location(&mut c, isbn.to_string(), loc_tar).await {
-                            //     println!("Cannot update {}'s location... moving on",isbn);
-                            // }
                         } else {
                             continue
                         },

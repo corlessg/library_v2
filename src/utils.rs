@@ -1,9 +1,9 @@
 use bson::Document;
 use reqwest::StatusCode;
 use serde_json::Value;
-use std::io;
-
-use crate::models::Book;
+use std::io::{self, Error};
+use std::str::FromStr;
+use crate::models::{Book, HouseLocations};
 
 // To be used in things...
 
@@ -31,8 +31,6 @@ pub async fn fetch_book_details(isbn: String) -> Result<String, String> {
         _ => Err(format!("Unexpected status code: {}", response.status())),
     }
 }
-
-
 
 pub fn modify_json_structure(json_str: &str) -> Result<String,String> {
     let mut json_value: Value = serde_json::from_str(json_str).expect("Failed to parse JSON");
@@ -74,4 +72,21 @@ pub fn read_user_input() -> String {
     let mut input = String::new();
     io::stdin().read_line(&mut input).expect("Failed to read line");
     input
+}
+
+pub fn input_house_location() -> HouseLocations {
+    loop {
+        println!("Where are these books stored?");
+        for &option in HouseLocations::variants() {
+            println!("- {}", option);
+        }
+
+        let input = read_user_input().trim().to_lowercase();
+        let result = HouseLocations::from_str(&input);
+
+        match result {
+            Ok(result) => return result,
+            Err(err) => println!("Error: {}, Please enter a valid location", err)
+        }
+    }
 }

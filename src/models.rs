@@ -1,7 +1,8 @@
 // models lists all necessary structs we expect to need in our database
 // these will be derived from what is returned calling the ISBN API
 
-use core::fmt;
+use std::fmt;
+use std::str::FromStr;
 
 use serde::{Deserialize,Serialize};
 
@@ -12,6 +13,13 @@ pub enum HouseLocations {
     Bethany
 }
 
+impl HouseLocations {
+    /// Returns a list of all enum variants as strings
+    pub fn variants() -> &'static [&'static str] {
+        &["Mars", "Bethany"] // Modify this if new locations are added
+    }
+}
+
 impl fmt::Display for HouseLocations {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let house_loc = match self {
@@ -19,6 +27,18 @@ impl fmt::Display for HouseLocations {
             HouseLocations::Mars => "Mars"
         };
         write!(f, "{}", house_loc)
+    }
+}
+
+impl FromStr for HouseLocations {
+    type Err = String;
+    
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input.to_lowercase().as_str() {
+            "mars" => Ok(HouseLocations::Mars),
+            "bethany" => Ok(HouseLocations::Bethany),
+            _ => Err(format!("Invalid choice: '{}'. Please enter a valid house location.", input)),
+        }
     }
 }
 

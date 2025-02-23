@@ -61,20 +61,26 @@ impl LibraryRespository {
         Ok((result,book_name))
     }
 
-    pub async fn create_book(c: &mut Client,isbn: String) -> Result<(InsertOneResult,String),Error> {
+    pub async fn create_book(c: &mut Client,isbn: String, house_loc: Option<String>) -> Result<(InsertOneResult,String),Error> {
         let details = utils::fetch_book_details(isbn.clone()).await
         .map_err(|e| Error::custom(format!("API Error {}",e)))?;
 
         
         // this fixes the ISBN number name to be _id which is the unique identifier field automatically used by mongoDB        
         let details_edited = details.replacen("ISBN", "_id", 1);
-    
+        
+        // modified the JSON structure
         let details_edited_flat = utils::modify_json_structure(details_edited.as_str())
             .expect("Failed to flatten the JSON details returned by OpenLibrary's API");
 
-        let new_doc = utils::json_to_bson(details_edited_flat.as_str())
+        let mut new_doc = utils::json_to_bson(details_edited_flat.as_str())
             .expect("Failed to convert JSON to BSON following the OpenLib API call");
         
+        // Inject the house value if it exists
+        if let Some(house_loc) = house_loc {
+            new_doc.insert("location.house", house_loc);
+        }
+
         let book_name = new_doc.get_str("title")
             .expect(format!("Could not resolve title name from book {}",isbn)
             .as_str())

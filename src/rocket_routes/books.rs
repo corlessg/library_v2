@@ -23,7 +23,7 @@ pub async fn get_books(mut db: Connection<DbConn>) -> Result<Value,Custom<Value>
 
 #[rocket::post("/books", data="<book_isbn>")]
 pub async fn create_book(mut db: Connection<DbConn>, book_isbn: String) -> Result<Custom<Value>,Custom<Value>> {
-    LibraryRespository::create_book(&mut db, book_isbn).await
+    LibraryRespository::create_book(&mut db, book_isbn,None).await
     .map(|a_book| Custom(Status::Created, json!(a_book)))
     .map_err(|e| server_error(e.into()))
 }
