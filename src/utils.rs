@@ -1,7 +1,7 @@
 use bson::Document;
 use reqwest::StatusCode;
 use serde_json::Value;
-use std::io::{self, Error};
+use std::io;
 use std::str::FromStr;
 use crate::models::{Book, HouseLocations};
 

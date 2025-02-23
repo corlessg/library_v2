@@ -1,10 +1,9 @@
 
 use std::{fs::File, io::BufReader, path::Path};
 use csv::ReaderBuilder;
-use mongodb::{error::Error, results::{DeleteResult, UpdateResult}, Client};
-use tokio::task::LocalEnterGuard;
+use mongodb::{error::Error, results::UpdateResult, Client};
 
-use crate::{models::HouseLocations, repositories::LibraryRespository, utils};
+use crate::{ repositories::LibraryRespository, utils};
 
 
 
@@ -52,7 +51,9 @@ pub async fn find_books_title(title: String) {
 pub async fn add_book(isbn: String) {
     let mut c = load_mongo_client().await;
 
-    let book = LibraryRespository::create_book(&mut c, isbn).await;
+    let house_loc = utils::input_house_location();
+
+    let book = LibraryRespository::create_book(&mut c, isbn, Some(house_loc.to_string())).await;
 
     match book {
         Ok((_,book_name)) => println!("Successfully added the book: {:?}! ", book_name),

@@ -1,4 +1,4 @@
-use crate::{commands, models};
+use crate::commands;
 use crate::utils::read_user_input;
 
 // TODO GPC - add the locations when adding book(s) batch and single
