@@ -1,7 +1,6 @@
 use crate::commands;
 use crate::utils::read_user_input;
 
-// TODO GPC - add the locations when adding book(s) batch and single
 
 
 pub async fn scan_books() {
@@ -115,31 +114,3 @@ async fn add_books() {
         }
     }
 }
-
-
-// TODO GPC - fix this by implementing static slices as variants() on the houselocations enum in models
-
-// fn get_location() -> models::HouseLocations {
-    // loop {
-    //     println!("Select a house location:");
-
-    //     // Dynamically list all available locations
-    //     for &option in HouseLocations::variants() {
-    //         println!("- {}", option);
-    //     }
-
-    //     print!("Enter your choice: ");
-    //     io::stdout().flush().unwrap(); // Ensure the prompt is displayed
-
-    //     let mut input = String::new();
-    //     io::stdin().read_line(&mut input).unwrap();
-    //     let input = input.trim();
-
-    //     match HouseLocations::from_str(input) {
-    //         Ok(location) => return location,
-    //         Err(_) => println!("Invalid choice. Please enter one of the listed locations."),
-    //     }
-    // }
-
-// }
-

@@ -2,8 +2,11 @@
 use std::{fs::File, io::BufReader, path::Path};
 use csv::ReaderBuilder;
 use mongodb::{error::Error, results::UpdateResult, Client};
+use serde_json::{Value,from_value};
+use std::str::FromStr;
 
-use crate::{ repositories::LibraryRespository, utils};
+
+use crate::{ models::{HouseLocations, Location}, repositories::LibraryRespository, utils};
 
 
 
@@ -80,9 +83,35 @@ pub async fn remove_book(isbn: String) {
 }
 
 // // TODO GPC
-// pub async fn update_book(isbn: String, location: Location) {
+pub async fn update_book(isbn: String, location_json: Value) {
+    let mut c = load_mongo_client().await;    
 
-// }
+    let location: Location = from_value(location_json).expect("failed to parse JSON to Location struct");
+
+    // test location for correct house location
+    let house_result = HouseLocations::from_str(&location.house.to_string());
+
+    match house_result {
+        Ok(_) => (),
+        Err(err) => println!("Error: {}, Location was invalid", err)
+    }
+
+    let book_update = LibraryRespository::update_book_location(c, isbn, location).await;
+
+    match book_update {
+        Ok((update, book_name)) => 
+            if update.matched_count == 0 {
+                println!("book_name {:?} not found!", &isbn)
+            } else {
+                println!("Successfully updated the book: {:?} with the new location values", book_name)
+            }
+
+        Err(err) => println!("Could not update the book's location values due to: {:?} ", err.get_custom::<String>()
+    .expect("Problem parsing custom error"))
+    }
+
+
+}
 
 pub async fn checkout_book(isbn: String, borrower: String) {
     let mut c = load_mongo_client().await;    
