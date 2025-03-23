@@ -174,7 +174,7 @@ cargo run --bin cli batch ./books.csv
 - The `scanner` mode is useful when working with barcode scanners.
 - The CSV file for `batch` upload should be formatted correctly (see CSV specs for details).
 
-
+---
 
 Web-Server Routes:
 
@@ -196,7 +196,6 @@ Retrieve a book by its ISBN.
 GET /books/9783161484100
 
 ---
-
 
 ### 📚 `GET /books`
 
@@ -245,8 +244,9 @@ Update the location of an existing book by its ISBN.
 - **Request Body (JSON):**
   ```json
   {
-    "aisle": "A3",
-    "shelf": "4"
+    "house": "arlington",
+    "room": "library",
+    "owner":"John Smith"
   }
 
  ---
