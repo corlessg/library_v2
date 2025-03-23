@@ -96,12 +96,12 @@ pub async fn update_book(isbn: String, location_json: Value) {
         Err(err) => println!("Error: {}, Location was invalid", err)
     }
 
-    let book_update = LibraryRespository::update_book_location(c, isbn, location).await;
+    let book_update = LibraryRespository::update_book_location(&mut c, &isbn, location).await;
 
     match book_update {
         Ok((update, book_name)) => 
             if update.matched_count == 0 {
-                println!("book_name {:?} not found!", &isbn)
+                println!("book_name {:?} not found!", isbn)
             } else {
                 println!("Successfully updated the book: {:?} with the new location values", book_name)
             }

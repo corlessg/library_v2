@@ -94,14 +94,14 @@ impl LibraryRespository {
                 
     }
 
-    pub async fn update_book_location(c: &mut Client, isbn: String, loc: Location) -> Result<(UpdateResult,String),Error> {
-        
-        let books: Collection<Book> = c.database("library").collection("books");
-        let filter = doc! { "_id": &isbn };
+    pub async fn update_book_location(c: &mut Client, isbn: &String, loc: Location) -> Result<(UpdateResult,String),Error> {
+        let books: Collection<Document> = c.database("library").collection("books");
+
+        let filter = doc! { "_id": isbn };
         
         let book = books.find_one(filter.clone(), None).await?;
-
-        let book_name = book.map(|b| b.title.clone())
+        println!("{:?}",book);
+        let book_name = book.map(|b| b.get_str("title").expect("'Title' does not exist in document").to_string())
             .expect(format!("Could not resolve book name while updating {}",isbn).as_str());
 
         let mut new_loc_doc = Document::new();

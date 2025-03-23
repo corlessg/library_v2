@@ -32,7 +32,7 @@ pub async fn create_book(mut db: Connection<DbConn>, book_isbn: String) -> Resul
 pub async fn update_book(mut db: Connection<DbConn>, id: String, book_location: Json<Location>) -> Result<Value, Custom<Value>> {
     let book_loc = book_location.into_inner();
     
-    LibraryRespository::update_book_location(&mut db, id, book_loc).await
+    LibraryRespository::update_book_location(&mut db, &id, book_loc).await
         .map(|a_loc| json!(a_loc))
         .map_err(|e| server_error(e.into()))
 }

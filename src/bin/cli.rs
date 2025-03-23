@@ -1,6 +1,6 @@
 
 use clap::{Command, Arg};
-use serde_json::{Map,json, Value};
+use serde_json::{Map, Value};
 
 extern crate library;
 use library::commands;
@@ -105,10 +105,12 @@ match matches.subcommand() {
             update_map.insert("owner".to_string(), Value::String(owner.to_string()));
         }
 
+        // Confident in isbn existing as it is a required field for CLI call
+        let isbn = update_map.get("isbn").unwrap().to_string();
         // Convert the map into a JSON Value.
         let location_json = Value::Object(update_map);
         
-        commands::update_book(isbn,update_json).await
+        commands::update_book(isbn,location_json).await
     }
     Some(("remove", sub_matches)) => commands::remove_book(
         sub_matches.get_one::<String>("isbn").expect("Could not parse the string inout").to_string()
