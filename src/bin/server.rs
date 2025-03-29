@@ -1,3 +1,5 @@
+// main function to operate the web-server
+
 extern crate library;
 
 use rocket;

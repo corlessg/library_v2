@@ -1,3 +1,5 @@
+// List of commands useful to interacting with the database. These commands are called from the CLI application, including
+// operating in the scanner mode
 
 use std::{fs::File, io::BufReader, path::Path};
 use csv::ReaderBuilder;
@@ -8,12 +10,14 @@ use std::str::FromStr;
 
 use crate::{ models::{HouseLocations, Location}, repositories::LibraryRespository, utils};
 
-
-
 async fn load_mongo_client() -> Client {
-    // Load the MongoDB connection string from an environment variable:
-    // let client_uri = env::var("MONGODB_URI").expect("You must set the MONGODB_URI environment var!");
-    Client::with_uri_str("mongodb://user:pass@mongodb/library?authSource=admin").await.expect("Failure to connect to MongoDB client")
+    // Set the connection string manually:
+    let client_uri = "mongodb://user:pass@mongodb/library?authSource=admin";
+
+    // Or you can set the MongoDB connection string from an environment variable:
+    // let client_uri = env::var("MONGODB_URI").expect("You must set the MONGODB_URI environment var!"); 
+
+    Client::with_uri_str(client_uri).await.expect("Failure to connect to MongoDB client")
 }
 
 pub async fn find_book(isbn: String) {
@@ -82,13 +86,12 @@ pub async fn remove_book(isbn: String) {
     }
 }
 
-// // TODO GPC
 pub async fn update_book(isbn: String, location_json: Value) {
     let mut c = load_mongo_client().await;    
 
     let location: Location = from_value(location_json).expect("failed to parse JSON to Location struct");
 
-    // test location for correct house location
+    // Confirm location for possible house locations, per settings in models::HouseLocations 
     let house_result = HouseLocations::from_str(&location.house.to_string());
 
     match house_result {

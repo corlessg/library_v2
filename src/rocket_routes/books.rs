@@ -1,3 +1,5 @@
+// all routes for web-server mode to perform actions on the database
+
 use rocket::http::Status;
 use rocket::response::status::Custom;
 use rocket::serde::json::{json, Json, Value};

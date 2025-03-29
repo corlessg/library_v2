@@ -1,6 +1,3 @@
-// models lists all necessary structs we expect to need in our database
-// these will be derived from what is returned calling the ISBN API
-
 use std::fmt;
 use std::str::FromStr;
 
@@ -55,6 +52,10 @@ impl Default for CheckedStatus {
     }
 }
 
+// Keeping all commented components in the structs below to showcase the possible returned fields from the OpenLibrary.org API 
+// should a user want to take advantage of the additional fields
+
+
 #[allow(warnings)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Book {
@@ -96,7 +97,7 @@ struct Subject {
     // url: Option<String>,
 }
 
-// TODO: In thoery this should be address, state, etc. but not putting that onto Github...
+
 #[allow(warnings)]
 #[derive(Debug,Serialize, Deserialize)]
 pub struct Location {

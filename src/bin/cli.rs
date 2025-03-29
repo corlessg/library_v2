@@ -1,3 +1,4 @@
+// main function to call CLI tool
 
 use clap::{Command, Arg};
 use serde_json::{Map, Value};
